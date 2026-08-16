@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jugadas Analizadas · CE Ferreries</title>
+<style>
+:root {
+  --bg: #0d1310;
+  --bg-alt: #131b16;
+  --card: #172019;
+  --card-border: #24312a;
+  --accent: #4ade80;
+  --accent-dim: #1f4a34;
+  --text: #eef3ee;
+  --text-dim: #9fb0a4;
+  --pending: #d9a441;
+  --radius: 14px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body {
+  background: radial-gradient(circle at top, var(--bg-alt), var(--bg) 60%);
+  color: var(--text);
+  line-height: 1.55;
+}
+a { color: inherit; }
+.topbar {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 18px 32px; border-bottom: 1px solid var(--card-border);
+  position: sticky; top: 0; background: rgba(13,19,16,0.92); backdrop-filter: blur(8px); z-index: 10;
+}
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 700; letter-spacing: .02em; text-decoration: none; font-size: 1.05rem; cursor: pointer; background: none; border: none; color: var(--text); padding: 0; }
+.brand .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 12px var(--accent); }
+.nav-select { display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end; }
+.nav-select button {
+  background: var(--card); border: 1px solid var(--card-border); color: var(--text-dim);
+  font-size: 0.78rem; padding: 6px 11px; border-radius: 999px; cursor: pointer;
+}
+.nav-select button:hover, .nav-select button.active { color: var(--accent); border-color: var(--accent); }
+main { max-width: 1080px; margin: 0 auto; padding: 40px 32px 80px; }
+.hero { margin-bottom: 36px; }
+.hero h1 { font-size: clamp(1.7rem, 3vw, 2.4rem); margin: 0 0 8px; }
+.hero p { color: var(--text-dim); max-width: 640px; margin: 0; }
+.progress { margin-top: 18px; display: flex; align-items: center; gap: 10px; font-size: .85rem; color: var(--text-dim); }
+.progress-bar { flex: 1; max-width: 240px; height: 6px; border-radius: 999px; background: var(--card-border); overflow: hidden; }
+.progress-bar span { display: block; height: 100%; background: var(--accent); border-radius: 999px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 18px; }
+.card { background: var(--card); border: 1px solid var(--card-border); border-radius: var(--radius); padding: 20px; text-decoration: none; color: var(--text); display: flex; flex-direction: column; gap: 14px; transition: transform .15s ease, border-color .15s ease; min-height: 168px; cursor: pointer; }
+.card:hover { transform: translateY(-3px); border-color: var(--accent); }
+.card-number { font-size: .78rem; color: var(--text-dim); letter-spacing: .08em; text-transform: uppercase; }
+.card h3 { margin: 0; font-size: 1.1rem; line-height: 1.35; }
+.card p { margin: 0; color: var(--text-dim); font-size: .9rem; flex: 1; }
+.badge { display: inline-flex; align-self: flex-start; align-items: center; gap: 6px; font-size: .72rem; font-weight: 600; letter-spacing: .03em; text-transform: uppercase; padding: 5px 10px; border-radius: 999px; background: var(--accent-dim); color: var(--accent); }
+.badge.pending { background: #3a2c14; color: var(--pending); }
+.status-tag { font-size: .75rem; color: var(--text-dim); display: flex; align-items: center; gap: 6px; }
+.status-tag .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+.status-tag.pending .dot { background: var(--pending); }
+.action-header { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.action-title { font-size: clamp(1.5rem, 3vw, 2.1rem); margin: 6px 0 4px; }
+.meta-row { display: flex; flex-wrap: wrap; gap: 10px; color: var(--text-dim); font-size: .92rem; margin-bottom: 30px; }
+.meta-row span { background: var(--bg-alt); border: 1px solid var(--card-border); padding: 4px 10px; border-radius: 999px; }
+section.block { background: var(--card); border: 1px solid var(--card-border); border-radius: var(--radius); padding: 26px 28px; margin-bottom: 22px; }
+section.block h2 { margin: 0 0 14px; font-size: 1.05rem; text-transform: uppercase; letter-spacing: .05em; color: var(--accent); }
+section.block.analyst h2 { color: #7fd6ff; }
+.block p { margin: 0 0 14px; color: var(--text); }
+.block p:last-child { margin-bottom: 0; }
+.empty-note { color: var(--text-dim); font-style: italic; }
+.video-box { border: 1.5px dashed var(--card-border); border-radius: var(--radius); padding: 26px; text-align: center; background: var(--bg-alt); }
+.video-box.has-video { border-style: solid; padding: 0; overflow: hidden; background: black; }
+.video-box input[type="file"] { display: none; }
+.upload-btn { display: inline-flex; align-items: center; gap: 8px; background: var(--accent); color: #0d1310; font-weight: 700; border: none; padding: 11px 20px; border-radius: 999px; cursor: pointer; font-size: .92rem; }
+.upload-btn:hover { filter: brightness(1.05); }
+.video-hint { margin-top: 10px; font-size: .82rem; color: var(--text-dim); }
+.video-box video { width: 100%; max-height: 560px; display: block; background: black; }
+.video-toolbar { display: flex; justify-content: space-between; align-items: center; padding: 10px 16px; background: var(--bg-alt); border-top: 1px solid var(--card-border); }
+.video-toolbar button { background: none; border: 1px solid var(--card-border); color: var(--text-dim); padding: 6px 12px; border-radius: 999px; cursor: pointer; font-size: .8rem; }
+.video-toolbar button:hover { color: var(--accent); border-color: var(--accent); }
+.pager { display: flex; justify-content: space-between; margin-top: 30px; gap: 12px; }
+.pager button { flex: 1; text-align: left; text-decoration: none; background: var(--card); border: 1px solid var(--card-border); border-radius: var(--radius); padding: 14px 18px; font-size: .85rem; color: var(--text-dim); cursor: pointer; font-family: inherit; }
+.pager button:hover { border-color: var(--accent); color: var(--text); }
+.pager button.next { text-align: right; }
+footer.foot { text-align: center; color: var(--text-dim); font-size: .8rem; padding: 30px; }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <button class="brand" onclick="navigate('home')"><span class="dot"></span> Jugadas Analizadas · CE Ferreries</button>
+  <div class="nav-select" id="navSelect"></div>
+</div>
+<main id="app"></main>
+<footer class="foot">Análisis táctico generado como material de estudio interno &middot; CE Ferreries</footer>
+
+<script>
+const ACCIONES = [{"id": 1, "estado": "listo", "equipo": "CE Ferreries", "jugador": "Luca", "posicion": "Defensa central", "categoria": "ABP Ofensivo · Gol", "titulo": "Gol de Luca desde el punto ciego", "resumen": "Ganada de espalda al marcador en ABP y remate desde el punto ciego.", "descripcion_usuario": "El defensa central Luca, del CE Ferreries, en una acción a balón parado (ABP) ofensiva, gana la espalda al rival y desde allí ataca desde el punto ciego. Gol de Luca.", "analisis_tactico": ["En las acciones a balón parado ofensivas, uno de los recursos más eficaces y menos explotados por los rivales es el desmarque de ruptura hacia el <strong>punto ciego</strong> del marcador. Aquí Luca no ataca el balón desde una posición estática dentro del bloque de remate: gana la espalda de su marcador, es decir, se sitúa fuera de su campo de visión inmediato en el momento del golpeo, y desde ahí lanza la carrera de ataque al espacio.", "Este movimiento explota una debilidad estructural muy habitual en la marcación individual o mixta en ABP: el defensor tiende a fijar la atención en el balón y en los rivales que tiene delante, perdiendo la referencia de quienes arrancan desde detrás o desde fuera de su visión periférica. Al ganar la espalda, Luca convierte una duda de posicionamiento del rival en una ventaja de metros y de anticipación en el primer contacto con el balón.", "<strong>Qué lo hace funcionar:</strong> la sincronización entre la posición de partida en el punto ciego y la trayectoria del centro, el timing de arranque dentro de la carga al área (salir tarde y no pronto, para no perder el factor sorpresa) y un centro con el peso justo para que la llegada del balón coincida con la del corredor.", "<strong>Qué se puede trabajar de cara a repetir la jugada:</strong> diseñar un bloqueo o pantalla legal de un compañero que ocupe brevemente la zona del marcador para ampliar ese punto ciego una fracción de segundo más; variar el punto de partida de Luca entre distintas ABP para que el rival no pueda anticipar el patrón tras el scouting; y automatizar con el lanzador el instante exacto del arranque según el tipo de centro (tenso al primer palo o flotado al segundo)."]}, {"id": 2, "estado": "listo", "equipo": "CE Ferreries", "jugador": "Luca", "posicion": "Defensa central (segundo central)", "categoria": "Defensivo · Error de cobertura", "titulo": "Basculación excesiva de Luca: carril central desprotegido", "resumen": "Luca bascula demasiado hacia la banda y deja el carril central sin cobertura.", "descripcion_usuario": "Acción defensiva: un central sigue a su par hacia la banda, y el otro central (Luca) bascula demasiado hacia ese mismo lado, dejando el carril central muy desprotegido y generando un intervalo muy grande entre el central y el lateral opuesto. Luca es el segundo central.", "analisis_tactico": ["Esta jugada ilustra uno de los errores de coordinación más habituales en una línea de centrales: la descompensación entre el marcaje individual y la basculación colectiva. Cuando el primer central sigue a su par hacia la banda, el segundo central —en este caso Luca— tiene la responsabilidad de bascular hacia ese costado para cerrar el hueco que deja su compañero, pero sin perder ni la referencia del carril central ni la conexión con el lateral del lado contrario.", "En esta acción, Luca bascula en exceso: se desplaza demasiado hacia el lado del balón, replicando el movimiento de su compañero en vez de compensarlo. El resultado es doble: el carril central del área queda completamente sin referencia de central, y se abre un intervalo demasiado amplio entre Luca y el lateral opuesto, que pasa a tener que cubrir una franja de campo mucho mayor de la que le corresponde.", "Este tipo de desajuste suele originarse por una <strong>lectura individual del peligro</strong> en lugar de una lectura colectiva de la línea: el central reacciona al balón y al movimiento inmediato del rival, en vez de sostener referencias posicionales fijas (medio del área, altura de la línea de centrales) que actúen como ancla para todo el bloque defensivo.", "<strong>Qué se puede mejorar:</strong> fijar una regla clara de basculación —uno sigue al hombre, el otro cierra el centro sin sobrepasar una distancia máxima respecto al punto de penalti—; mejorar la comunicación verbal entre centrales para que quien queda de segundo palo ordene la distancia y la cobertura; y entrenar específicamente situaciones de superioridad en banda para automatizar cuándo se sigue, cuándo se bascula y cuándo se cede el carril exterior al lateral para no romper la línea interior."]}, {"id": 3, "estado": "listo", "equipo": "CE Ferreries", "jugador": "Luca", "posicion": "Defensa central", "categoria": "ABP Ofensivo · Gol", "titulo": "Luca gana la cara a su marcador y marca el segundo gol", "resumen": "Se zafa de la marca en la pugna, gana la cara y remata para el 2-0.", "descripcion_usuario": "Nueva acción a balón parado ofensiva: Luca pugna con su marcador, consigue zafarse de la marca, le gana la cara y mantiene la posición ganada para rematar y marcar el segundo gol.", "analisis_tactico": ["A diferencia de la primera jugada, aquí el gol no nace de un desmarque hacia un espacio libre, sino de un <strong>duelo directo de posición</strong> dentro del bloque de remate. Luca y su marcador pugnan cuerpo con cuerpo por el sitio, y es Luca quien logra zafarse del agarre y, sobre todo, <strong>ganar la cara</strong>: colocarse entre el marcador y el balón, de frente a la trayectoria del centro, en lugar de quedar de espaldas o lateral a la jugada.", "Ganar la cara en un ABP tiene un valor táctico específico: invierte la relación de fuerzas del marcaje. El defensor, que en condiciones normales debería tener prioridad por estar 'pegado' al atacante, pierde la referencia visual del balón y queda en desventaja física para disputar el salto o el primer contacto. Quien tiene la cara gana automáticamente la prioridad en la pugna aérea o en el remate a ras de suelo, porque ve el balón antes y puede iniciar el movimiento de ataque a la pelota con ventaja de tiempo.", "Lo decisivo de la acción no es solo ganar esa posición, sino <strong>sostenerla</strong> hasta el momento del remate: Luca no se conforma con desmarcarse un instante, sino que ocupa y defiende el espacio ganado con el cuerpo (brazos, tronco, apoyos) hasta que llega el balón, evitando que el marcador se recupere y vuelva a ganarle la posición antes del disparo.", "<strong>Qué se puede reforzar de cara a repetir el patrón:</strong> trabajar en entrenamiento la pugna de posición cuerpo a cuerpo (drills de bloqueo y sostenimiento legal de espacio) para automatizar cómo y cuándo liberarse del agarre; entrenar el remate rápido y decidido una vez ganada la posición, ya que el marcador intentará recuperarla de inmediato; y variar el momento del arranque de la pugna (antes, durante o después del inicio de la carrera del lanzador) para que el rival no pueda anticipar el patrón de Luca en sucesivas ABP."]}, {"id": 4, "estado": "listo", "equipo": "CE Ferreries", "jugador": "Gida", "posicion": "", "categoria": "Ofensivo · Ataque a la espalda (ocasión, remate al palo)", "titulo": "Gida ataca la espalda y remata rozando el palo largo", "resumen": "Carrera al punto ciego en profundidad, control con el pie alejado y disparo raso que sale rozando el palo largo.", "descripcion_usuario": "Acción ofensiva en tres cuartos de campo: Gida parte desde la espalda de los rivales, se mueve desde el punto ciego aprovechando un carril liberado, para recibir un balón en profundidad. Controla en la línea del área grande con el pie alejado, y luego con la derecha cruza raso, saliendo fuera y lamiendo el palo largo.", "analisis_tactico": ["El punto de partida de la jugada ya es la clave táctica: Gida arranca <strong>desde la espalda de los rivales</strong>, es decir, fuera de la línea defensiva y fuera del campo de visión inmediato de los marcadores. Al moverse desde ese punto ciego y ocupar un carril que ha quedado liberado, convierte un desmarque de ruptura en una carrera al espacio prácticamente sin oposición en el primer tramo, lo que le permite llegar al balón en profundidad con ventaja de metros sobre cualquier central que tenga que girar y perseguir.", "El control en la línea del área grande realizado con el <strong>pie alejado</strong> del defensor es un detalle técnico de alto valor táctico: al orientar el primer toque con la pierna más lejana al rival, Gida interpone su propio cuerpo entre el balón y el defensor que llega en carrera, protegiendo la posesión en el momento de mayor presión y evitando la disputa directa que un control con el pie cercano habría permitido.", "La resolución —recorte a la derecha y disparo raso y cruzado— es una decisión de alto valor esperado: el tiro raso y cruzado hacia el palo largo es estadísticamente uno de los remates más difíciles de detener para el portero, porque lo obliga a desplazarse por completo y a bajar las manos, y reduce el ángulo de reacción respecto a un disparo al primer palo. Que el balón salga rozando el palo largo indica que la ejecución estuvo a centímetros de ser gol, no que la decisión de tiro fuera incorrecta.", "<strong>Qué se puede mejorar de cara a repetir esta acción con gol:</strong> trabajar la orientación del cuerpo en el control para dejar el pie derecho ya preparado para golpear sin necesidad de un toque adicional, ganando así una fracción de segundo y precisión en el golpeo; incorporar en los entrenamientos remates específicos desde esa zona y ángulo (línea de área, diagonal a portería) para automatizar el gesto; y valorar, según la posición del portero, la alternativa de un pase de la muerte a un compañero llegando por detrás como recurso de menor riesgo cuando el ángulo de disparo sea muy cerrado."]}, {"id": 5, "estado": "listo", "equipo": "CE Ferreries", "jugador": "Gida (remate) · Yasser (referencia)", "posicion": "", "categoria": "Ofensivo · Juego directo / segunda jugada · Gol", "titulo": "Segunda jugada tras el saque largo del portero: gol de Gida", "resumen": "Balón largo del portero a Yasser de referencia; Gida llega tarde pero aprovecha la prolongación y marca.", "descripcion_usuario": "El portero lanza en largo a la posición de Yasser, que es la referencia arriba. En esta jugada tiene que haber algún pivote que dé línea de pase a la cara del punta, así como al menos un extremo (o si no, el mediapunta) corriendo al espacio, preparados para aprovechar la prolongación del balón si Yasser logra peinar. Vemos que Gida al final consigue correr al espacio, pero igual podía haber preparado la carrera un segundo antes; de todas formas se lleva el balón y consigue el gol.", "analisis_tactico": ["El saque largo del portero hacia Yasser como referencia aérea no es una jugada individual, sino un <strong>patrón colectivo</strong> que depende de la estructura que se organiza alrededor del punta en el momento del golpeo. Para que un balón directo se convierta en ataque real y no en un simple 50-50 aéreo, hacen falta al menos dos figuras de apoyo simultáneas: un pivote cercano que ofrezca línea de pase a la cara de Yasser (opción corta si consigue controlar o dejar de cabeza) y, en paralelo, un jugador —extremo o mediapunta— atacando el espacio por detrás de la línea defensiva rival, listo para la prolongación si Yasser solo logra peinar el balón.", "Esta doble cobertura es lo que transforma un despeje largo en una ocasión clara: si el rival gana el primer duelo aéreo, el pivote asegura la segunda jugada corta; si Yasser logra al menos tocar y prolongar el balón, el corredor de espacio ya está lanzado para llegar antes que la defensa a la caída del balón. Sin esa estructura previa, el saque largo depende únicamente de que el punta gane su duelo individual, lo cual reduce mucho la probabilidad de generar ocasión.", "En esta acción concreta, es Gida quien finalmente ataca ese espacio y se lleva el balón tras la prolongación de Yasser, lo cual demuestra que el equipo tiene automatizado el instinto de ocupar esa segunda línea. Aun así, el arranque de su carrera llega <strong>después</strong> de ver el contacto de Yasser con el balón, en lugar de anticiparse un segundo antes: iniciar el movimiento en el momento del golpeo del portero (o incluso durante la carrera de aproximación de Yasser) le habría dado medio paso extra de ventaja sobre los centrales rivales, un margen que a menudo es la diferencia entre una ocasión cómoda y una disputada.", "<strong>Qué se puede mejorar:</strong> entrenar específicamente el patrón de saque largo con roles fijos —quién ocupa el pivote de apoyo, quién ataca el espacio— para que la reacción no dependa de leer el resultado del duelo aéreo sino de anticiparlo; trabajar con Gida (y con quien ocupe ese rol) el arranque de la carrera en el instante del golpeo del portero, no tras el cabeceo de Yasser; y variar el punto de partida de esa carrera en distintas repeticiones para que la defensa rival no pueda anticipar el patrón."]}, {"id": 6, "estado": "listo", "equipo": "CE Ferreries", "jugador": "Yasser (remate) · Youssef (pase filtrado)", "posicion": "", "categoria": "Ofensivo · Combinación y ruptura · Gol", "titulo": "Triángulo de relación, doble movimiento de Yasser y gol cruzado", "resumen": "Youssef filtra el pase tras el amague de Yasser, que gana la espalda y remata cruzado de izquierda al palo largo.", "descripcion_usuario": "Buena organización desde un triángulo de relación: Youssef recibe el balón, y gran movimiento de Yasser con engaño a su marcador, haciéndole ver que le cruza por delante y cambiando la trayectoria para ganar la ruptura por la espalda de ese marcador. Pase filtrado perfecto y buen timing de Youssef. Yasser marca el gol tras un control con la pierna alejada y un tiro cruzado al palo largo con la izquierda.", "analisis_tactico": ["La jugada arranca de un recurso básico pero muy eficaz de la circulación de balón: el <strong>triángulo de relación</strong>, que ofrece siempre al portador (en este caso Youssef) al menos dos líneas de pase simultáneas y obliga al bloque rival a repartir su atención en varias direcciones a la vez. Que el balón llegue limpio a Youssef en esa estructura es lo que le permite tener tiempo y ángulo de visión suficientes para lo que viene después.", "El movimiento de Yasser es un <strong>doble desplazamiento</strong> (checking run) clásico para romper marcajes: primero amaga con cruzar por delante de su marcador, como si buscara recibir de cara o abrir un carril hacia banda, y en el instante en que el defensor compromete su peso y orientación corporal hacia ese amago, Yasser cambia bruscamente la trayectoria y ataca la espalda del rival. Al manipular primero la referencia visual y el apoyo del defensor, el segundo movimiento —el real— llega cuando el marcador ya no está en condiciones de reaccionar a tiempo.", "El pase filtrado de Youssef es el segundo factor decisivo: no basta con el desmarque de Yasser si el pase no está sincronizado en el mismo instante del cambio de trayectoria. Un pase demasiado pronto delataría la ruptura al marcador; uno demasiado tarde llegaría con el defensor ya recuperado. El timing de Youssef conecta ambos movimientos exactamente en la ventana en la que el desmarque es efectivo.", "En la finalización se repite un patrón ya visto con Gida (acción 4): control con la pierna alejada del defensor para proteger el balón, y definición cruzada al palo largo, esta vez con la zurda. <strong>Qué reforzar:</strong> seguir trabajando en pareja el amague-ruptura de Yasser con la lectura de pase de Youssef hasta automatizar el timing en distintos contextos de partido; variar el lado del amague inicial para no volverse predecibles; y consolidar el control orientado con la pierna alejada como gesto técnico recurrente del equipo en definiciones dentro del área."]}, {"id": 7, "estado": "listo", "equipo": "CE Ferreries", "jugador": "Youssef (pivote)", "posicion": "Pivote", "categoria": "Defensivo · Rechace y cierre de progresión", "titulo": "Rechace al centro y cierre equivocado: progresión libre del rival", "resumen": "El central rechaza hacia el centro y Youssef cierra la banda en vez de cerrar la progresión interior.", "descripcion_usuario": "El rechace del central ha de ir afuera, porque rechaza con el balón hacia el centro y recoge el rechace el punta rival. Los pivotes tienen que cerrar la progresión del rival: lo importante es cerrar por dentro, no priorizar cerrar el pase hacia la banda como hace Youssef. Debe ir enseguida a cerrar la progresión del rival, tanto sea para conducción como para pase o tiro.", "analisis_tactico": ["El primer error de la secuencia es de principios básicos de despeje: bajo presión, el rechace de un central siempre debe salir <strong>hacia el exterior</strong> del campo, nunca hacia el centro. Un rechace central mantiene el balón vivo en la zona de mayor peligro, justo donde el rival tiene más opciones de continuar el ataque con espacio de frente a portería. Aquí el central rechaza hacia dentro y el propio punta rival recoge el segundo balón en la zona más comprometida posible.", "El segundo error, encadenado al primero, es de lectura posicional del pivote. Ante una progresión rival tras un rechace, la prioridad de un pivote no es cerrar la línea de pase hacia la banda, sino <strong>cerrar por dentro</strong>: negar la progresión central, que es la que ofrece al rival todas las opciones a la vez (conducción hacia portería, pase interior o tiro). El pase a banda es, comparativamente, la opción menos peligrosa, porque reduce el ángulo de portería y suele tener cobertura natural de la línea de fondo y del lateral.", "Al priorizar el cierre hacia banda, Youssef deja completamente libre la vía más dañina: el rival puede encarar con espacio, decidir entre conducir, filtrar un pase interior o directamente rematar. El principio defensivo aquí es claro: primero se cierra dentro-fuera (se elimina la amenaza central y se conduce al rival hacia la banda), nunca al revés.", "<strong>Qué se puede mejorar:</strong> automatizar en los centrales el gesto de rechazar siempre hacia el lateral/fuera cuando están bajo presión y sin opción de pase limpio, evitando cualquier rechace ciego hacia el centro; y entrenar con los pivotes la prioridad de cierre en situaciones de balón suelto o transición defensiva —primero negar el carril central de progresión, y solo después, con el rival ya orientado hacia fuera, ocuparse de la banda—. Conviene reforzarlo con vídeo y repeticiones de transición defensiva 2v1 y 3v2 para fijar el orden de prioridades."]}, {"id": 8, "estado": "listo", "equipo": "CE Ferreries", "jugador": "Línea defensiva (DFC / Pivote)", "posicion": "", "categoria": "Defensivo · Desorden posicional y marcaje", "titulo": "Intercambio de roles sin orden: nadie referencia, todos miran el balón", "resumen": "Tras el cambio DFC-pivote no hay marcas férreas: el central sale demasiado y nadie referencia al rival.", "descripcion_usuario": "Intercambio de posiciones entre el DFC y el pivote (este no trabaja bien de central). No hay marcas férreas de ningún defensa. Lo primero: el DFC no ha de perder el centro del área, no salir tan lejos a cerrar un centro. Segundo: si el pivote coge el rol de central, debe ser expeditivo como un central y cerrar los espacios o marcas férreas como un central. El otro central ha de referenciar al punta rival, y no dejarle ni un metro. Al igual que los otros jugadores que están defendiendo el área, ninguno está referenciando a los rivales: están mirando balón.", "analisis_tactico": ["El origen de la jugada es un intercambio de roles entre el DFC y el pivote dentro del área propia. Este tipo de rotación puede ser válido como recurso puntual, pero exige que quien asume una posición que no es la suya habitual adopte inmediatamente sus exigencias: aquí el pivote toma el rol de central sin comportarse como tal, y esa falta de rigor es el primer eslabón de una secuencia de errores en cadena.", "El primer error concreto es del propio DFC: sale demasiado lejos de su posición para presionar un centro, abandonando el <strong>centro del área</strong>, que es la zona más determinante y de mayor peligro directo a portería. La norma básica de un central es no comprometer esa referencia central salvo certeza absoluta de llegar al balón; salir a distancia a cerrar un centro sacrifica una zona de máximo riesgo por una probabilidad baja de interceptación.", "El segundo error es la falta de contundencia del pivote una vez ocupa el puesto de central: debe actuar de forma <strong>expeditiva</strong> —despejar sin dudar, ganar la posición antes que el rival, cerrar espacios con decisión— igual que lo haría un central de oficio, y no con los automatismos más reactivos propios de su posición habitual. En paralelo, el otro central debe referenciar de forma estricta al punta rival, sin cederle ni un metro de ventaja, porque en el área esa distancia es exactamente lo que separa un rechace limpio de un remate franco.", "El denominador común de toda la jugada, y el punto más importante a corregir, es que <strong>ningún defensor está referenciando a un rival</strong>: todos miran el balón en vez de marcar a un hombre, que es una de las causas más habituales de gol en jugadas de área. <strong>Qué trabajar:</strong> definir de antemano quién asume qué referencia cuando se produce un intercambio DFC-pivote, para que la rotación no genere un vacío de marcaje; y entrenar específicamente la disciplina visual de defender con referencia al rival (ver el balón de reojo, marcar al hombre) en lugar de la tendencia natural a fijar la vista en el balón."]}, {"id": 9, "estado": "listo", "equipo": "CE Ferreries", "jugador": "Barrera defensiva", "posicion": "", "categoria": "Defensivo · Barrera en falta directa", "titulo": "Barrera descompuesta: giros, cabezas bajas y hueco en el extremo", "resumen": "La barrera se abre: jugadores de perfil, cabezas agachadas y un hueco grande en el extremo.", "descripcion_usuario": "Al saque de una falta directa del rival, nuestra barrera se mueve y se abre: algunos se giran y, al quedar de perfil, cierran mucho menos espacio; alguno se queda quieto o baja la cabeza; y el del extremo se separa mucho de su compañero, dejando mucho espacio para poder pasar el balón.", "analisis_tactico": ["Una barrera solo cumple su función si actúa como un bloque único, sólido y alineado: cada jugador debe ocupar una posición fija, de frente al balón y pegado a sus compañeros, para maximizar el ancho de portería cubierto en el instante del golpeo. La eficacia de la barrera depende casi por completo de la disciplina colectiva en ese único segundo, no de la habilidad individual de cada jugador que la compone.", "El primer fallo —jugadores que se giran y quedan de perfil— suele ser una reacción instintiva de protección ante el posible impacto del balón, pero tiene un coste táctico directo: un cuerpo de perfil cubre mucha menos anchura que un cuerpo colocado de frente, así que exactamente en el punto donde el jugador se gira se abre un hueco que antes de girarse no existía. Bajar la cabeza tiene el mismo efecto sobre la altura cubierta: reduce el área efectiva de bloqueo y, además, delata al lanzador la zona exacta por la que puede buscar el hueco, ya sea por encima o a la altura de esa cabeza agachada.", "El segundo fallo, en el extremo de la barrera, es aún más determinante: el jugador que cierra el lateral se separa demasiado de su compañero, abriendo un pasillo por el que el balón puede colarse raso, sin necesidad siquiera de superar la barrera por arriba. Una barrera es tan sólida como su hueco más débil: por muy bien colocado que esté el resto del bloque, una sola abertura en el extremo anula todo el trabajo colectivo.", "<strong>Qué se puede mejorar:</strong> entrenar la barrera con balón real y repeticiones sistemáticas para desensibilizar el instinto de girarse o agachar la cabeza (protegiendo con los brazos cruzados a la altura de la zona baja del cuerpo, sin romper la posición frontal); asignar a un jugador —habitualmente el del extremo— la responsabilidad explícita de cerrar el hueco final y fijar una distancia mínima hombro con hombro entre todos los componentes de la barrera; y designar a alguien (portero u organizador de la barrera) que revise y corrija la colocación justo antes del golpeo, no después."]}];
+const videoFiles = {}; // id -> File, mantiene el video elegido mientras dure la sesión del navegador
+
+function navigate(target) {
+  location.hash = target === 'home' ? '' : ('accion-' + target);
+}
+
+function buildNav(activeId) {
+  const nav = document.getElementById('navSelect');
+  nav.innerHTML = '';
+  const homeBtn = document.createElement('button');
+  homeBtn.textContent = 'Inicio';
+  if (!activeId) homeBtn.classList.add('active');
+  homeBtn.onclick = () => navigate('home');
+  nav.appendChild(homeBtn);
+  ACCIONES.forEach(a => {
+    const b = document.createElement('button');
+    b.textContent = a.id;
+    if (a.id === activeId) b.classList.add('active');
+    b.title = a.titulo;
+    b.onclick = () => navigate(a.id);
+    nav.appendChild(b);
+  });
+}
+
+function renderHome() {
+  buildNav(null);
+  const total = ACCIONES.length;
+  const listas = ACCIONES.filter(a => a.estado === 'listo').length;
+  const pct = total ? Math.round((listas / total) * 100) : 0;
+  const cards = ACCIONES.map(a => {
+    const pending = a.estado !== 'listo';
+    return `
+    <div class="card" onclick="navigate(${a.id})">
+      <span class="card-number">Acción ${String(a.id).padStart(2,'0')}</span>
+      <span class="badge ${pending ? 'pending' : ''}">${pending ? 'Pendiente' : a.categoria}</span>
+      <h3>${a.titulo}</h3>
+      <p>${a.resumen}</p>
+      <span class="status-tag ${pending ? 'pending' : ''}"><span class="dot"></span>${pending ? 'Falta descripción' : 'Lista'}</span>
+    </div>`;
+  }).join('');
+
+  document.getElementById('app').innerHTML = `
+    <div class="hero">
+      <h1>Jugadas analizadas — CE Ferreries</h1>
+      <p>Recopilación de ${total} acciones de juego con descripción de la jugada, análisis táctico y video de cada una.</p>
+      <div class="progress">
+        <span>${listas}/${total} completadas</span>
+        <div class="progress-bar"><span style="width:${pct}%"></span></div>
+      </div>
+    </div>
+    <div class="grid">${cards}</div>`;
+}
+
+function videoBoxHtml(id) {
+  return `
+  <div class="video-box" id="videoBox-${id}">
+    <input type="file" id="fileInput-${id}" accept="video/*">
+    <label class="upload-btn" for="fileInput-${id}">Elegir video</label>
+    <p class="video-hint">Selecciona el archivo de video de esta jugada desde tu ordenador.<br>
+    Se reproduce en esta sesión del navegador (no se sube a ningún sitio); si ya lo elegiste antes, se recupera automáticamente al volver a esta página.</p>
+  </div>`;
+}
+
+function wireVideoBox(id) {
+  const box = document.getElementById('videoBox-' + id);
+  if (!box) return;
+
+  function showEmpty() {
+    box.classList.remove('has-video');
+    box.innerHTML = `
+      <input type="file" id="fileInput-${id}" accept="video/*">
+      <label class="upload-btn" for="fileInput-${id}">Elegir video</label>
+      <p class="video-hint">Selecciona el archivo de video de esta jugada desde tu ordenador.<br>
+      Se reproduce en esta sesión del navegador (no se sube a ningún sitio); si ya lo elegiste antes, se recupera automáticamente al volver a esta página.</p>`;
+    document.getElementById('fileInput-' + id).addEventListener('change', onFileChosen);
+  }
+
+  function showVideo(file) {
+    const url = URL.createObjectURL(file);
+    box.classList.add('has-video');
+    box.innerHTML = `
+      <video controls autoplay src="${url}"></video>
+      <div class="video-toolbar">
+        <span>${file.name}</span>
+        <button type="button" id="changeBtn-${id}">Cambiar video</button>
+      </div>`;
+    document.getElementById('changeBtn-' + id).addEventListener('click', () => {
+      delete videoFiles[id];
+      showEmpty();
+    });
+  }
+
+  function onFileChosen(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    videoFiles[id] = file;
+    showVideo(file);
+  }
+
+  if (videoFiles[id]) {
+    showVideo(videoFiles[id]);
+  } else {
+    document.getElementById('fileInput-' + id).addEventListener('change', onFileChosen);
+  }
+}
+
+function renderAction(a) {
+  buildNav(a.id);
+  const pending = a.estado !== 'listo';
+  const metaBits = [];
+  if (a.equipo) metaBits.push(`<span>${a.equipo}</span>`);
+  if (a.jugador) metaBits.push(`<span>${a.jugador}${a.posicion ? ' · ' + a.posicion : ''}</span>`);
+  if (a.categoria) metaBits.push(`<span>${a.categoria}</span>`);
+
+  const descBlock = pending
+    ? '<p class="empty-note">Todavía no se ha recibido la descripción de esta jugada.</p>'
+    : `<p>${a.descripcion_usuario}</p>`;
+  const analysisBlock = pending
+    ? '<p class="empty-note">El análisis táctico se generará en cuanto tenga la descripción de la jugada.</p>'
+    : a.analisis_tactico.map(p => `<p>${p}</p>`).join('');
+
+  const idx = ACCIONES.findIndex(x => x.id === a.id);
+  const prev = idx > 0 ? ACCIONES[idx - 1] : null;
+  const next = idx < ACCIONES.length - 1 ? ACCIONES[idx + 1] : null;
+
+  document.getElementById('app').innerHTML = `
+    <div class="action-header"><span class="card-number">Acción ${String(a.id).padStart(2,'0')}</span></div>
+    <h1 class="action-title">${a.titulo}</h1>
+    <div class="meta-row">${metaBits.join('')}</div>
+    <section class="block">
+      <h2>Qué ocurre en la jugada</h2>
+      ${descBlock}
+    </section>
+    <section class="block analyst">
+      <h2>Análisis táctico</h2>
+      ${analysisBlock}
+    </section>
+    <section class="block">
+      <h2>Video de la jugada</h2>
+      ${videoBoxHtml(a.id)}
+    </section>
+    <div class="pager">
+      <button onclick="navigate(${prev ? prev.id : "'home'"})">&larr; ${prev ? 'Acción ' + String(prev.id).padStart(2,'0') : 'Índice'}</button>
+      <button class="next" onclick="navigate(${next ? next.id : "'home'"})">${next ? 'Acción ' + String(next.id).padStart(2,'0') : 'Índice'} &rarr;</button>
+    </div>`;
+
+  wireVideoBox(a.id);
+}
+
+function router() {
+  const hash = location.hash.replace('#', '');
+  if (!hash || hash === '/' || hash === 'home') {
+    renderHome();
+    return;
+  }
+  const m = hash.match(/accion-(\d+)/);
+  const id = m ? parseInt(m[1], 10) : null;
+  const accion = ACCIONES.find(a => a.id === id);
+  if (accion) {
+    renderAction(accion);
+  } else {
+    renderHome();
+  }
+  window.scrollTo(0, 0);
+}
+
+window.addEventListener('hashchange', router);
+router();
+</script>
+</body>
+</html>
